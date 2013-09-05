@@ -118,7 +118,8 @@ namespace wow64cli
     */
     System::Boolean wow64Process::CreateRemoteThread64( System::UInt64 address, System::UInt64 arg, System::Boolean wait )
     {
-        return (_native->CreateRemoteThread64(address, arg, wait) == TRUE);
+        DWORD64 status = 0;
+        return (_native->CreateRemoteThread64(address, arg, status, wait) == TRUE);
     }
 
     /*

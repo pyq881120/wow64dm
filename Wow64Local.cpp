@@ -29,7 +29,6 @@ Wow64Local::~Wow64Local(void)
 {
 }
 
-
 /*
 */
 DWORD64 Wow64Local::X64Call( DWORD64 func, int argC, ... )
@@ -133,6 +132,15 @@ DWORD64 Wow64Local::X64CallV( DWORD64 func, int argC, va_list args )
 */
 void __declspec(naked, noinline) Wow64Local::memcpy64(DWORD64 /*dst*/, DWORD64 /*src*/, DWORD /*size*/)
 {
+    __asm
+    {
+        push ebp
+        mov ebp, esp
+        pushad
+    }
+
+    X64_Start();
+
     /*
         mov rdi, QWORD PTR [rbp + 0x8]
         mov rsi, QWORD PTR [rbp + 0x10]
@@ -147,16 +155,6 @@ void __declspec(naked, noinline) Wow64Local::memcpy64(DWORD64 /*dst*/, DWORD64 /
         test ecx, ecx
       jnz loop1
     */
-    
-    __asm
-    {
-        push ebp
-        mov ebp, esp
-        pushad
-    }
-
-    X64_Start();
-
     EMIT(0x48) EMIT(0x8B) EMIT(0x7D) EMIT(0x08)
     EMIT(0x48) EMIT(0x8B) EMIT(0x75) EMIT(0x10)
     EMIT(0x8B) EMIT(0x4D) EMIT(0x18)

@@ -61,12 +61,13 @@ bool WoW64dm::Attach( DWORD pid )
     }
 }
 
+/*
+*/
 void WoW64dm::Attach( HANDLE hProcess )
 {
     _hProcess = hProcess;
     _pid      = GetProcessId(hProcess);
 }
-
 
 /*
 */
@@ -292,10 +293,9 @@ DWORD64 WoW64dm::GetProcAddress64( DWORD64 hModule, DWORD size, const char* func
     IMAGE_EXPORT_DIRECTORY* ied = (IMAGE_EXPORT_DIRECTORY*)(buf.get() + idd.VirtualAddress);
 
     DWORD* rvaTable  = (DWORD*)(buf.get() + ied->AddressOfFunctions);
-    WORD* ordTable   = (WORD*) (buf.get() + ied->AddressOfNameOrdinals);
+    WORD*  ordTable  = (WORD*) (buf.get() + ied->AddressOfNameOrdinals);
     DWORD* nameTable = (DWORD*)(buf.get() + ied->AddressOfNames);
 
-    // lazy search, there is no need to use binsearch for just one function
     for (DWORD i = 0; i < ied->NumberOfFunctions; i++)
     {
         WORD OrdIndex   = 0xFFFF;
@@ -345,12 +345,6 @@ DWORD64 WoW64dm::GetProcAddress64( DWORD64 hModule, DWORD size, const char* func
 
             return pFunc;
         }
-        /*if (strcmp((char*)buf.get() + nameTable[i], funcName))
-            continue;
-        else
-        {
-            return (DWORD64)(hModule + rvaTable[ordTable[i]]);
-        }*/
     }
 
     return 0;
@@ -358,7 +352,7 @@ DWORD64 WoW64dm::GetProcAddress64( DWORD64 hModule, DWORD size, const char* func
 
 /*
 */
-BOOL WoW64dm::CreateRemoteThread64( DWORD64 address, DWORD64 arg, bool wait /*= false*/ )
+BOOL WoW64dm::CreateRemoteThread64( DWORD64 address, DWORD64 arg, DWORD64& exitStatus, bool wait /*= false */ )
 {
     DWORD64 hKernel32 = _local.GetModuleHandle64(L"kernelbase.dll");
     if(hKernel32 == 0)
@@ -374,8 +368,17 @@ BOOL WoW64dm::CreateRemoteThread64( DWORD64 address, DWORD64 arg, bool wait /*= 
 
             if(hThread != 0)
             {
+                _THREAD_BASIC_INFORMATION_T<DWORD64> tbi = {0};
+                DWORD64 bytes = 0;
+
                 if(wait)
                     WaitForSingleObject((HANDLE)hThread, INFINITE);
+
+                if(DWORD64 ntqit = _local.GetProcAddress64(_local.getNTDLL64(), "NtQueryInformationThread"))
+                {
+                    if((NTSTATUS)_local.X64Call(ntqit, 6, (DWORD64)hThread, (DWORD64)0, (DWORD64)&tbi, (DWORD64)sizeof(tbi), (DWORD64)&bytes) == STATUS_SUCCESS)
+                        exitStatus = tbi.ExitStatus & 0xFFFFFFFF;
+                }
 
                 return TRUE;
             }
@@ -385,7 +388,9 @@ BOOL WoW64dm::CreateRemoteThread64( DWORD64 address, DWORD64 arg, bool wait /*= 
     return FALSE;
 }
 
-BOOL WoW64dm::LoadLibrary64( const wchar_t* path )
+/*
+*/
+DWORD64 WoW64dm::LoadLibrary64( const wchar_t* path )
 {
     BOOL isWOW = FALSE;
     IsWow64Process(_hProcess, &isWOW);
@@ -406,10 +411,12 @@ BOOL WoW64dm::LoadLibrary64( const wchar_t* path )
 
             if(pLoadLib != 0 && WriteProcessMemory64(memptr, (LPVOID)path, (wcslen(path) + 1)*sizeof(wchar_t), 0) == STATUS_SUCCESS)
             {
-                if(CreateRemoteThread64(pLoadLib, memptr, true) != FALSE)
+                DWORD64 status = 0;
+
+                if(CreateRemoteThread64(pLoadLib, memptr, status, true) != FALSE && status == STATUS_SUCCESS)
                 {
                     VirtualFreeEx64(memptr, 0x1000, MEM_RELEASE);
-                    return TRUE;
+                    return status;
                 }
             }
 
@@ -433,7 +440,7 @@ BOOL WoW64dm::LoadLibrary64( const wchar_t* path )
     |  Return handle  |   UNICODE_STRING   |  dll path  |  padding  | executable code  | 
     ------------------------------------------------------------------------------------
 */
-BOOL WoW64dm::LoadLibraryRemoteWOW64( const wchar_t* path )
+DWORD64 WoW64dm::LoadLibraryRemoteWOW64( const wchar_t* path )
 {
     DWORD64 memptr = 0;
     int idx = 0;
@@ -458,8 +465,8 @@ BOOL WoW64dm::LoadLibraryRemoteWOW64( const wchar_t* path )
             0x6A, 0x33, 0xE8, 0x00, 0x00, 0x00, 0x00, 0x83, 0x04, 0x24, 0x05, 0xCB,         
 
             0x65, 0x48, 0x8B, 0x04, 0x25, 0x30, 0x00, 0x00, 0x00,           // mov rax, gs:[30]
-            0x48, 0xBA, 0xEF, 0xBE, 0xAD, 0xDE, 0xEF, 0xBE, 0xAD, 0xDE,     // movabs rdx, 0xdeadbeefdeadbeef
-            0x48, 0x89, 0x90, 0xC8, 0x02, 0x00, 0x00,                       // mov QWORD PTR [rax+0x2c8],rdx
+            0x48, 0xBA, 0xEF, 0xBE, 0xAD, 0xDE, 0xEF, 0xBE, 0xAD, 0xDE,     // movabs rdx, memptr + 0x700
+            0x48, 0x89, 0x90, 0xC8, 0x02, 0x00, 0x00,                       // mov QWORD PTR [rax + 0x2c8],rdx
             0x48, 0x89, 0xE5,                                               // mov rbp, rsp
             0x48, 0x83, 0xE4, 0xF0,                                         // and rsp, 0xfffffffffffffff0
             0x48, 0x83, 0xEC, 0x28,                                         // sub rsp, 0x30
@@ -493,17 +500,23 @@ BOOL WoW64dm::LoadLibraryRemoteWOW64( const wchar_t* path )
            WriteProcessMemory64(upath.Buffer, (LPVOID)path, upath.Length + sizeof(wchar_t), 0) == STATUS_SUCCESS &&
            WriteProcessMemory64(codeAddr, code, sizeof(code), 0) == STATUS_SUCCESS)
         {
-            if(CreateRemoteThread64(codeAddr, 0, true) != FALSE)
+            DWORD64 status = 0;
+
+            if(CreateRemoteThread64(codeAddr, 0, status, true) != FALSE && (status & 0xFFFFFFFF) == STATUS_SUCCESS)
             {
+                DWORD64 module = 0;
+
+                ReadProcessMemory64(memptr, &module, sizeof(module), 0);
                 VirtualFreeEx64(memptr, 0x1000, MEM_RELEASE);
-                return TRUE;
+
+                return module;
             }
         }
 
         VirtualFreeEx64(memptr, 0x1000, MEM_FREE);
     }        
 
-    return FALSE;
+    return 0;
 }
 
 }

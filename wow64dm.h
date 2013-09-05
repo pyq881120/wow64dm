@@ -74,11 +74,11 @@ public:
 
     /*
     */
-    BOOL CreateRemoteThread64( DWORD64 address, DWORD64 arg, bool wait = false );
+    BOOL CreateRemoteThread64( DWORD64 address, DWORD64 arg, DWORD64& exitStatus, bool wait = false );
 
     /*
     */
-    BOOL LoadLibrary64( const wchar_t* path );
+    DWORD64 LoadLibrary64( const wchar_t* path );
 
     /*
     */
@@ -87,7 +87,7 @@ public:
 private:
     /*
     */
-    BOOL LoadLibraryRemoteWOW64( const wchar_t* path );
+    DWORD64 LoadLibraryRemoteWOW64( const wchar_t* path );
     
 private:
     HANDLE      _hProcess;
