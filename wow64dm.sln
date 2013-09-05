@@ -1,0 +1,51 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 2012
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "wow64dm", "wow64dm.vcxproj", "{151C135C-98B1-4990-9C61-A2E4C3A24E87}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "wow64Test", "wow64Test\wow64Test.vcxproj", "{B7A96B78-D7D9-450D-A75B-7044BCA899FD}"
+	ProjectSection(ProjectDependencies) = postProject
+		{151C135C-98B1-4990-9C61-A2E4C3A24E87} = {151C135C-98B1-4990-9C61-A2E4C3A24E87}
+	EndProjectSection
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "wow64cli", "wow64cli\wow64cli.vcxproj", "{23A9B459-CC6E-40C9-A1FC-F77B1ED542C1}"
+	ProjectSection(ProjectDependencies) = postProject
+		{151C135C-98B1-4990-9C61-A2E4C3A24E87} = {151C135C-98B1-4990-9C61-A2E4C3A24E87}
+	EndProjectSection
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "cliTest", "wow64cli\cliTest\cliTest.csproj", "{2C415B5A-E2AA-44E6-9CD4-567E22977E4D}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Win32 = Debug|Win32
+		Release|Win32 = Release|Win32
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{151C135C-98B1-4990-9C61-A2E4C3A24E87}.Debug|Win32.ActiveCfg = Debug|Win32
+		{151C135C-98B1-4990-9C61-A2E4C3A24E87}.Debug|Win32.Build.0 = Debug|Win32
+		{151C135C-98B1-4990-9C61-A2E4C3A24E87}.Debug|Win32.Deploy.0 = Debug|Win32
+		{151C135C-98B1-4990-9C61-A2E4C3A24E87}.Release|Win32.ActiveCfg = Release|Win32
+		{151C135C-98B1-4990-9C61-A2E4C3A24E87}.Release|Win32.Build.0 = Release|Win32
+		{151C135C-98B1-4990-9C61-A2E4C3A24E87}.Release|Win32.Deploy.0 = Release|Win32
+		{B7A96B78-D7D9-450D-A75B-7044BCA899FD}.Debug|Win32.ActiveCfg = Debug|Win32
+		{B7A96B78-D7D9-450D-A75B-7044BCA899FD}.Debug|Win32.Build.0 = Debug|Win32
+		{B7A96B78-D7D9-450D-A75B-7044BCA899FD}.Debug|Win32.Deploy.0 = Debug|Win32
+		{B7A96B78-D7D9-450D-A75B-7044BCA899FD}.Release|Win32.ActiveCfg = Release|Win32
+		{B7A96B78-D7D9-450D-A75B-7044BCA899FD}.Release|Win32.Build.0 = Release|Win32
+		{B7A96B78-D7D9-450D-A75B-7044BCA899FD}.Release|Win32.Deploy.0 = Release|Win32
+		{23A9B459-CC6E-40C9-A1FC-F77B1ED542C1}.Debug|Win32.ActiveCfg = Debug|Win32
+		{23A9B459-CC6E-40C9-A1FC-F77B1ED542C1}.Debug|Win32.Build.0 = Debug|Win32
+		{23A9B459-CC6E-40C9-A1FC-F77B1ED542C1}.Debug|Win32.Deploy.0 = Debug|Win32
+		{23A9B459-CC6E-40C9-A1FC-F77B1ED542C1}.Release|Win32.ActiveCfg = Release|Win32
+		{23A9B459-CC6E-40C9-A1FC-F77B1ED542C1}.Release|Win32.Build.0 = Release|Win32
+		{23A9B459-CC6E-40C9-A1FC-F77B1ED542C1}.Release|Win32.Deploy.0 = Release|Win32
+		{2C415B5A-E2AA-44E6-9CD4-567E22977E4D}.Debug|Win32.ActiveCfg = Debug|Any CPU
+		{2C415B5A-E2AA-44E6-9CD4-567E22977E4D}.Debug|Win32.Build.0 = Debug|Any CPU
+		{2C415B5A-E2AA-44E6-9CD4-567E22977E4D}.Debug|Win32.Deploy.0 = Debug|Any CPU
+		{2C415B5A-E2AA-44E6-9CD4-567E22977E4D}.Release|Win32.ActiveCfg = Release|Any CPU
+		{2C415B5A-E2AA-44E6-9CD4-567E22977E4D}.Release|Win32.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal
