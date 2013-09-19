@@ -39,6 +39,15 @@ DWORD64 Wow64Local::X64Call( DWORD64 func, int argC, ... )
 	return X64CallV(func, argC, args);
 }
 
+/*
+*/
+DWORD64 Wow64Local::X64Syscall( int idx, int argC, ... )
+{
+    va_list args;
+    va_start(args, argC);
+
+    return X64SyscallV(idx, argC, args);
+}
 
 /*
 */
@@ -108,6 +117,97 @@ DWORD64 Wow64Local::X64CallV( DWORD64 func, int argC, va_list args )
 
 		call   _func
 
+		;//cleanup stack
+		push   _argC
+		X64_Pop(_RCX);
+		lea    esp, dword ptr [esp + 8*ecx + 0x20]
+
+		pop    edi
+
+		//set return value
+		X64_Push(_RAX);
+		pop    _rax.dw[0]
+
+		X64_End();
+
+		mov    esp, back_esp
+	}
+
+	return _rax.v;
+}
+
+DWORD64 Wow64Local::X64SyscallV( int idx, int argC, va_list args )
+{
+    DWORD64 _rcx = (argC > 0) ? argC--, va_arg(args, DWORD64) : 0;
+	DWORD64 _rdx = (argC > 0) ? argC--, va_arg(args, DWORD64) : 0;
+	DWORD64 _r8 = (argC > 0) ? argC--, va_arg(args, DWORD64) : 0;
+	DWORD64 _r9 = (argC > 0) ? argC--, va_arg(args, DWORD64) : 0;
+	reg64 _rax;
+    DWORD32 _idx = idx;
+	_rax.v = 0;
+
+	DWORD64 restArgs = (DWORD64)&va_arg(args, DWORD64);
+	
+	//conversion to QWORD for easier use in inline assembly
+	DWORD64 _argC = argC;
+	DWORD back_esp = 0;
+
+	__asm
+	{
+		;//keep original esp in back_esp variable
+		mov    back_esp, esp
+		
+		;//align esp to 8, without aligned stack some syscalls may return errors !
+		and    esp, 0xFFFFFFF8
+
+		X64_Start();
+
+		;//fill first four arguments
+		push   _rcx
+		X64_Pop(_RCX);
+		push   _rdx
+		X64_Pop(_RDX);
+		push   _r8
+		X64_Pop(_R8);
+		push   _r9
+		X64_Pop(_R9);
+	
+		push   edi
+
+		push   restArgs
+		X64_Pop(_RDI);
+
+		push   _argC
+		X64_Pop(_RAX);
+
+		;//put rest of arguments on the stack
+		test   eax, eax
+		jz     _ls_e
+		lea    edi, dword ptr [edi + 8*eax - 8]
+
+		_ls:
+		test   eax, eax
+		jz     _ls_e
+		push   dword ptr [edi]
+		sub    edi, 8
+		sub    eax, 1
+		jmp    _ls
+		_ls_e:
+
+		;//create stack space for spilling registers
+		sub    esp, 0x20
+
+        call p1
+        jmp quit
+
+    p1:
+        mov eax, _idx
+        push _rcx
+        X64_Pop(_R10); 
+        EMIT(0x0F) EMIT(0x05)   ;// syscall
+        ret
+
+    quit:
 		;//cleanup stack
 		push   _argC
 		X64_Pop(_RCX);

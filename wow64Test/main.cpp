@@ -9,7 +9,15 @@ int wmain(int argc, wchar_t* argv[])
     DWORD size = 0;
     TEB64 teb = {0};
     PEB64 peb = {0};
-    DWORD64 addr = 0x100000000;   
+    DWORD64 addr = 0x7fff0000;   
+
+    uint8_t buf[255] = {0};
+    SIZE_T len = 0;
+
+    VirtualProtect((LPVOID)0x400000, 0x1000, PAGE_READWRITE, &size);
+    wow64.local().X64Syscall(0x3D, 5, (DWORD64)-1, (DWORD64)0x400000, (DWORD64)buf, (DWORD64)10, (DWORD64)&len);    // 0x3D - Win8 NtReadVirtualMemory
+
+    ReadProcessMemory(GetCurrentProcess(), (LPVOID)0x400000, buf, 0x10, &len);
 
     wow64.Attach(GetCurrentProcess());
     DWORD64 pteb = (DWORD64)wow64.local().getTEB64(teb);
@@ -30,7 +38,7 @@ int wmain(int argc, wchar_t* argv[])
 
     status = wow64.VirtualProtectEx64(addr, 0x1000, PAGE_READWRITE, &size);
     //status = wow64.VirtualFreeEx64(addr, 0x1000, MEM_RELEASE);
-    //status = wow64.VirtualAllocEx64(addr, 0x1000, MEM_COMMIT, PAGE_READWRITE);
+    status = wow64.VirtualAllocEx64(addr, 0x1000, MEM_COMMIT, PAGE_READWRITE);
     status = wow64.WriteProcessMemory64(addr, &teb, sizeof(teb), 0);
 
     //for(int i = 0; i < 1000000; i++)

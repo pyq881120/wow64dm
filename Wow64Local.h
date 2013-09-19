@@ -22,10 +22,13 @@ public:
     /*
     */
     DWORD64 X64Call(DWORD64 func, int argC, ...);
+    DWORD64 X64Syscall(int idx, int argC, ...);
 
     /*
     */
     DWORD64 X64CallV(DWORD64 func, int argC, va_list args);
+    DWORD64 X64SyscallV(int idx, int argC, va_list args );
+
 
     /*
     */
@@ -54,7 +57,6 @@ public:
     /*
     */
     DWORD64 LoadLibrary64( const wchar_t* path );
-
 private:
     fnNtWow64QIP  _NtWow64QIP;                          // NtWow64QueryInformationProcess64
     fnNtWow64VmOp _NtRPM, _NtWPM;                       // NtWow64WriteVirtualMemory64/fnNtWow64ReadVirtualMemory64
