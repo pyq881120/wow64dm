@@ -2,6 +2,16 @@
 //#include <winioctl.h>
 //#include "../../DarkMMap/VADPurge/VADPurgeDef.h"
 
+DWORD64 nanosleep(long long time)
+{
+    LARGE_INTEGER li = {0};
+    ds_wow64::WoW64dm wow64;
+
+    li.QuadPart = -(time / 100);
+
+    return wow64.local().X64Syscall(0x60032, 2, (DWORD64)FALSE, (DWORD64)&li);
+}
+
 int wmain(int argc, wchar_t* argv[])
 {
     ds_wow64::WoW64dm wow64;
@@ -13,6 +23,8 @@ int wmain(int argc, wchar_t* argv[])
 
     uint8_t buf[255] = {0};
     SIZE_T len = 0;
+
+    nanosleep(3LL*1000*1000*1000);
 
     VirtualProtect((LPVOID)0x400000, 0x1000, PAGE_READWRITE, &size);
     wow64.local().X64Syscall(0x3D, 5, (DWORD64)-1, (DWORD64)0x400000, (DWORD64)buf, (DWORD64)10, (DWORD64)&len);    // 0x3D - Win8 NtReadVirtualMemory

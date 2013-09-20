@@ -136,6 +136,8 @@ DWORD64 Wow64Local::X64CallV( DWORD64 func, int argC, va_list args )
 	return _rax.v;
 }
 
+/*
+*/
 DWORD64 Wow64Local::X64SyscallV( int idx, int argC, va_list args )
 {
     DWORD64 _rcx = (argC > 0) ? argC--, va_arg(args, DWORD64) : 0;
@@ -195,19 +197,13 @@ DWORD64 Wow64Local::X64SyscallV( int idx, int argC, va_list args )
 		_ls_e:
 
 		;//create stack space for spilling registers
-		sub    esp, 0x20
+		sub    esp, 0x28    
 
-        call p1
-        jmp quit
-
-    p1:
         mov eax, _idx
         push _rcx
         X64_Pop(_R10); 
         EMIT(0x0F) EMIT(0x05)   ;// syscall
-        ret
 
-    quit:
 		;//cleanup stack
 		push   _argC
 		X64_Pop(_RCX);
