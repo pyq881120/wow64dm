@@ -283,8 +283,9 @@ struct _PROCESS_BASIC_INFORMATION_T
 template<class T>
 struct _THREAD_BASIC_INFORMATION_T
 {
-    T   ExitStatus;
-    T   TebBaseAddress;
+    NTSTATUS  ExitStatus;
+    LONG      Padding;
+    T         TebBaseAddress;
 
     struct
     {
